@@ -1,15 +1,75 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+import java.io.*;
+import java.util.*;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+public class Main {
+    private static final String[] DESTINATIONS = { "Los Angeles", "Houston", "New Orleans", "Miami", "New York" };
+    private static final Car.Color[] COLORS = Car.Color.values();
+    private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    public static void main(String[] args) throws Exception {
+        int numLists = 3;
+        int carsPerList = 100_000;
+        int maxThreads = 8;
+
+        QuicksortEngine engine = new QuicksortEngine(maxThreads);
+        List<List<Car>> carLists = new ArrayList<>();
+        List<Thread> sortThreads = new ArrayList<>();
+
+        for (int i = 0; i < numLists; i++) {
+            List<Car> list = generateCarList(carsPerList);
+            carLists.add(list);
+            saveToFile(list, "cars-" + (i + 1) + ".txt");
+        }
+
+        for (int i = 0; i < carLists.size(); i++) {
+            final int index = i;
+            Thread t = new Thread(() -> {
+                List<Car> carList = carLists.get(index);
+                long start = System.currentTimeMillis();
+                // TODO This logging is flawed, basically only shows when the slowest one finishes.
+                // Add some kind of group ID's to make individual sorting jobs trackable
+                engine.submitJob(new SortJob(carList, 0, carList.size() - 1));
+                engine.waitUntilFinished();
+                long end = System.currentTimeMillis();
+                System.out.println("cars-" + (index + 1) + " sorted in " + (end - start) + " ms");
+                try {
+                    saveToFile(carList, "cars-" + (index + 1) + "-sorted.txt");
+                } catch (IOException e) {
+                    // TODO: add better logging to this.
+                    System.err.println("Failed to save sorted list to file: cars-" + (index + 1) + "-sorted.txt");
+                    e.printStackTrace(); // Halt and catch fire since the program cant save.
+                    System.exit(1);
+                }
+            });
+            sortThreads.add(t);
+            t.start();
+        }
+
+        for (Thread t : sortThreads) t.join();
+        engine.shutdown();
+    }
+
+    private static List<Car> generateCarList(int count) {
+        Set<String> usedSerials = new HashSet<>();
+        List<Car> cars = new ArrayList<>();
+        Random rand = new Random();
+
+        for (long i = 1; i <= count; i++) {
+            String serial;
+            do {
+                serial = SerialGenerator.generateSerial(rand);
+            } while (!usedSerials.add(serial));
+            cars.add(new Car(i, serial, COLORS[rand.nextInt(COLORS.length)], DESTINATIONS[rand.nextInt(DESTINATIONS.length)]));
+        }
+        return cars;
+    }
+
+
+    private static void saveToFile(List<Car> list, String filename) throws IOException {
+        try (PrintWriter writer = new PrintWriter(filename)) {
+            for (Car car : list) {
+                writer.println(car);
+            }
         }
     }
 }
