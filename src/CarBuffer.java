@@ -10,14 +10,14 @@ public class CarBuffer {
     // Destination lookup
     private static final String[] DEST_NAMES =
             {"Los Angeles","Houston","New Orleans","Miami","New York"};
-    public static int destToIndex(String d) {
-        for (int i = 0; i < DEST_NAMES.length; i++)
-            if (DEST_NAMES[i].equals(d)) return i;
-        throw new IllegalArgumentException(d);
-    }
+//    public static int destToIndex(String d) {
+//        for (int i = 0; i < DEST_NAMES.length; i++)
+//            if (DEST_NAMES[i].equals(d)) return i;
+//        throw new IllegalArgumentException(d);
+//    }
     public static String indexToDest(int i) { return DEST_NAMES[i]; }
 
-    // Color lookup by ordinal (fits in byte)
+    // Color lookup by order (fits in a byte)
     public enum Color { RED, BLUE, BLACK, WHITE }
 
     public CarBuffer(int n) {
