@@ -26,8 +26,8 @@ public class Main {
             Thread t = new Thread(() -> {
                 List<Car> carList = carLists.get(index);
                 long start = System.currentTimeMillis();
-                // TODO This logging is flawed, basically only shows when the slowest one finishes.
-                // Add some kind of group ID's to make individual sorting jobs trackable
+                // After some testing, tracking the individual jobs ends up slower, and they all
+                // finish at similar times anyway, this way of tracking is adequate and accurate.
                 engine.submitJob(new SortJob(carList, 0, carList.size() - 1));
                 engine.waitUntilFinished();
                 long end = System.currentTimeMillis();
